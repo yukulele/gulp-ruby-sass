@@ -51,13 +51,12 @@ function clipPath (clip, sourcePath) {
 // 	});
 // }
 
-// function removePaths(msg, paths) {
-// 	paths.forEach(function (path) {
-// 		msg = msg.replace(new RegExp((path) + '/?', 'g'), '');
-// 	});
-
-// 	return msg;
-// }
+// Removes OS temp dir and line breaks for more Sass-like logging
+function formatMsg(msg, tempDir) {
+	msg = msg.replace(new RegExp((tempDir) + '/?', 'g'), '');
+	msg = msg.trim();
+	return msg
+}
 
 // function createErr(err, opts) {
 // 	return new gutil.PluginError('gulp-ruby-sass', err, opts);
@@ -115,8 +114,10 @@ module.exports = function (source, options) {
 	sass.stdout.setEncoding('utf8');
 	sass.stderr.setEncoding('utf8');
 
+	// Includes Sass compile msgs
 	sass.stdout.on('data', function (data) {
-		// var msg = removePaths(data, [tempDir, relativeCompileDir]).trim();
+		var msg = formatMsg(data, dest);
+		gutil.log('gulp-ruby stdout:', msg);
 
 		// if (sassErrMatcher.test(msg) || noBundlerMatcher.test(msg) || noGemfileMatcher.test(msg)) {
 		// 	stream.emit('error', createErr(msg, {showStack: false}));
@@ -127,8 +128,10 @@ module.exports = function (source, options) {
 		// }
 	});
 
+	// Includes Sass warnings, debug statements
 	sass.stderr.on('data', function (data) {
-		// var msg = removePaths(data, [tempDir, relativeCompileDir]).trim();
+		var msg = formatMsg(data, dest);
+		gutil.log('gulp-ruby stderr:', msg);
 
 		// if (noBundleSassMatcher.test(msg)) {
 		// 	stream.emit('error', createErr(bundleErrMsg, {showStack: false}));
