@@ -9,7 +9,7 @@ var slash = require('slash');
 var rimraf = require('rimraf');
 var spawn = require('win-spawn');
 var gutil = require('gulp-util');
-var assign = require('object-assign')
+var assign = require('object-assign');
 var eachAsync = require('each-async');
 var osTempDir = require('os').tmpdir();
 var escapeRegExp = require('escape-string-regexp');
@@ -18,8 +18,8 @@ var File = require('vinyl');
 var Readable = require('stream').Readable;
 
 function clipPath (clip, sourcePath) {
-	return sourcePath.match(new RegExp(escapeRegExp(clip) + '(.*)$'))[1]
-};
+	return sourcePath.match(new RegExp(escapeRegExp(clip) + '(.*)$'))[1];
+}
 
 // function rewriteSourcemapPaths (compileDir, relativePath, cb) {
 // 	glob(path.join(compileDir, '**/*.map'), function (err, files) {
@@ -56,7 +56,7 @@ function clipPath (clip, sourcePath) {
 function formatMsg(msg, tempDir) {
 	msg = msg.replace(new RegExp((tempDir) + '/?', 'g'), '');
 	msg = msg.trim();
-	return msg
+	return msg;
 }
 
 function newErr(err, opts) {
@@ -130,11 +130,11 @@ module.exports = function (source, options) {
 			matchNoGemfile,
 			matchNoBundledSass
 		].some(function (match) {
-			return match.test(msg)
+			return match.test(msg);
 		});
 
 		if (isError) {
-			stream.emit('error', newErr(msg))
+			stream.emit('error', newErr(msg));
 		} else {
 			gutil.log('gulp-ruby stdout:', msg);
 		}
