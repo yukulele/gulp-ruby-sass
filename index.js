@@ -21,37 +21,6 @@ function clipPath (clip, sourcePath) {
 	return sourcePath.match(new RegExp(escapeRegExp(clip) + '(.*)$'))[1];
 }
 
-// function rewriteSourcemapPaths (compileDir, relativePath, cb) {
-// 	glob(path.join(compileDir, '**/*.map'), function (err, files) {
-// 		if (err) {
-// 			cb(err);
-// 			return;
-// 		}
-
-// 		eachAsync(files, function (file, i, next) {
-// 			fs.readFile(file, function (err, data) {
-// 				if (err) {
-// 					next(err);
-// 					return;
-// 				}
-
-// 				var sourceMap = JSON.parse(data);
-// 				var stepUp = path.relative(path.dirname(file), compileDir);
-
-// 				// rewrite sourcemaps to point to the original source files
-// 				sourceMap.sources = sourceMap.sources.map(function (source) {
-// 					var sourceBase = source.replace(/\.\.\//g, '');
-
-// 					// normalize to browser style paths if we're on windows
-// 					return slash(path.join(stepUp, relativePath, sourceBase));
-// 				});
-
-// 				fs.writeFile(file, JSON.stringify(sourceMap, null, '  '), next);
-// 			});
-// 		}, cb);
-// 	});
-// }
-
 // Removes OS temp dir and line breaks for more Sass-like logging
 function formatMsg(msg, tempDir) {
 	msg = msg.replace(new RegExp((tempDir) + '/?', 'g'), '');
@@ -78,9 +47,21 @@ module.exports = function (source, options) {
 	options = assign({}, options);
 	options.update = true;
 	options.container = options.container || 'gulp-ruby-sass';
+	options.sourcemap = options.sourcemap || 'auto';
+
+	// // check for compliance because our sourcemap API differs from Sass
+	// if (options.sourcemap !== 'auto' && options.sourcemap !== 'none' && options.sourcemap !== 'file') {
+	// 	stream.emit('error', newErr('The sourcemap option must be either \'auto\', \'none\', or undefined'));
+	// 	return;
+	// }
 
 	// all options passed to sass must use unix style slashes
 	dest = slash(path.join(osTempDir, options.container));
+
+
+	// temp
+	console.log(options.sourcemap);
+	console.log(dest);
 
 	// remove the previously generated files
 	// TODO: This kills caching. Keeping will push files through that are not in
@@ -163,9 +144,8 @@ module.exports = function (source, options) {
 	});
 
 	sass.on('close', function (code) {
-		// TODO: Here be dragons. Right now we grab all CSS files. This will have to
-		// be all files with some logic for sourcemaps, then grab x files based on
-		// the task source glob.
+		// TODO: Here be dragons. Right now we grab all CSS files. This will have
+		// to be grab x files based on the task source glob.
 		glob(path.join(dest, '**', '*.css'), function (err, files) {
 			if (err) {
 				stream.emit('error', new gutil.PluginError('gulp-ruby-sass', err));
@@ -181,32 +161,50 @@ module.exports = function (source, options) {
 						return;
 					}
 
-					var vinylFile = new File({
-						cwd: cwd,
-						base: base,
-						path: path.join(base, clipPath(dest, file)),
-						contents: new Buffer(data)
-					});
+					var ext = path.extname(file);
+					var vinylFile;
+					var map;
 
-					stream.push(vinylFile);
+					// stream everything but map files
+					if (ext !== '.map') {
+						map = file + '.map';
+						vinylFile = new File({
+							cwd: cwd,
+							base: base,
+							path: path.join(base, clipPath(dest, file)),
+							contents: new Buffer(data)
+						});
+
+						// add sourcemap to vinyl file
+						if (options.sourcemap !== 'none' && ext === '.css' && fs.existsSync(map)) {
+							vinylFile.sourceMap = fs.readFileSync(map);
+						}
+
+						stream.push(vinylFile);
+
+
+				// --sourcemap=TYPE             How to link generated output to the source files.
+				//  auto (default): relative paths where possible, file URIs elsewhere
+				//  file: always absolute file URIs
+				//  inline: include the source text in the sourcemap
+				//  none: no sourcemaps
+
+
+						// TMP
+						if (vinylFile.sourceMap) {
+							console.log(vinylFile.sourceMap.toString());
+						}
+						else {
+							console.log(file + ' has no map');
+						}
+					}
+
 					next();
 				});
 			}, function () {
 				stream.push(null);
 			});
 		});
-
-		// if (options.sourcemap && options.sourcemapPath) {
-		// 	rewriteSourcemapPaths(compileDir, options.sourcemapPath, function (err) {
-		// 		if (err) {
-		// 			stream.emit('error', createErr(err));
-		// 		}
-
-		// 		cb();
-		// 	});
-		// } else {
-		// 	cb();
-		// }
 	});
 
 	return stream;

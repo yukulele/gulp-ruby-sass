@@ -48,29 +48,15 @@ Use [gulp-watch](https://github.com/gulpjs/gulp/blob/master/docs/API.md#gulpwatc
 
 ##### sourcemap
 
-Type: `String`  
+Type: `string`  
 Default: `auto`
 
 Values:
 
-- `auto` - relative paths where possible, file URIs elsewhere
-- `file` - always absolute file URIs
-- `inline` - include the source text in the sourcemap
-- `none`- no sourcemaps
+**Unlike Sass**, the sourcemap option must be either `auto` or `none`. Requires Sass `>= 3.4`.
 
-Enable Source Map. **Requires Sass >= 3.4.0 and the [`sourcemapPath` option](#sourcemappath).**
-
-
-##### sourcemapPath
-
-Type: `string`  
-
-A relative path from the output CSS directory to the Sass source directory as seen by your web server.
-
-Because gulp-ruby-sass can't know your CSS destination directory or your server setup you have to give a little extra information to help the browser find sourcemaps. Examples:
-
-- If source is `site/scss`, destination is `site/css`, and you're serving from `site`: `{ sourcemapPath: '../scss' }`.
-- If source is `app/styles`, destination is `.tmp/styles`, and you're serving both `.tmp` and `app`: `{ sourcemapPath: '.' }`.
+- `auto`: Sourcemaps are generated for gulp-sourcemaps
+- `none`: no sourcemaps
 
 
 ##### trace
