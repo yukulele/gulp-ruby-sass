@@ -14,5 +14,5 @@ gulp.task('sass', function() {
    })
 	.pipe(sourcemaps.init({ loadMaps: true }))
 	.pipe(sourcemaps.write('../maps'))
-	.pipe(gulp.dest('fixture/results'));
+	.pipe(gulp.dest('fixture/result'));
 });

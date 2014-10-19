@@ -52,15 +52,10 @@ module.exports = function (source, options) {
 	// all options passed to sass must use unix style slashes
 	dest = slash(path.join(osTempDir, options.container));
 
-	// temp
-	console.log(options.sourcemap);
-	console.log(dest);
-
 	// remove the previously generated files
 	// TODO: This kills caching. Keeping will push files through that are not in
 	// the current gulp.src. We need to decide whether to use a Sass style caching
 	// strategy, or a gulp style strategy, and what each would look like.
-
 	rimraf.sync(dest);
 
 	args = dargs(options, [
@@ -132,7 +127,7 @@ module.exports = function (source, options) {
 	// spawn error: no sass executable
 	sass.on('error', function (err) {
 		if (matchNoSass.test(err)) {
-			err.msg = msgNoSass;
+			err.message = msgNoSass;
 		}
 		stream.emit('error', newErr(err));
 	});
