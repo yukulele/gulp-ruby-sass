@@ -49,15 +49,8 @@ module.exports = function (source, options) {
 	options.container = options.container || 'gulp-ruby-sass';
 	options.sourcemap = options.sourcemap || 'auto';
 
-	// // check for compliance because our sourcemap API differs from Sass
-	// if (options.sourcemap !== 'auto' && options.sourcemap !== 'none' && options.sourcemap !== 'file') {
-	// 	stream.emit('error', newErr('The sourcemap option must be either \'auto\', \'none\', or undefined'));
-	// 	return;
-	// }
-
 	// all options passed to sass must use unix style slashes
 	dest = slash(path.join(osTempDir, options.container));
-
 
 	// temp
 	console.log(options.sourcemap);
@@ -67,6 +60,7 @@ module.exports = function (source, options) {
 	// TODO: This kills caching. Keeping will push files through that are not in
 	// the current gulp.src. We need to decide whether to use a Sass style caching
 	// strategy, or a gulp style strategy, and what each would look like.
+
 	rimraf.sync(dest);
 
 	args = dargs(options, [
@@ -146,14 +140,21 @@ module.exports = function (source, options) {
 	sass.on('close', function (code) {
 		// TODO: Here be dragons. Right now we grab all CSS files. This will have
 		// to be grab x files based on the task source glob.
-		glob(path.join(dest, '**', '*.css'), function (err, files) {
+		glob(path.join(dest, '**', '*'), function (err, files) {
 			if (err) {
 				stream.emit('error', new gutil.PluginError('gulp-ruby-sass', err));
 			}
 
+			// RWRWRW Still working on Maps. pushing them through the stream, but getting map.map files, not getting the original map added to gulp sourcemaps
+
 			var base = path.join(cwd, source);
 
 			eachAsync(files, function (file, i, next) {
+				if (fs.statSync(file).isDirectory()) {
+					next();
+					return;
+				}
+
 				fs.readFile(file, function (err, data) {
 					if (err) {
 						stream.emit('error', new gutil.PluginError('gulp-ruby-sass', err));
@@ -161,45 +162,17 @@ module.exports = function (source, options) {
 						return;
 					}
 
-					var ext = path.extname(file);
-					var vinylFile;
-					var map;
+					var vinylFile = new File({
+						cwd: cwd,
+						base: base,
+						path: path.join(base, clipPath(dest, file)),
+						contents: data
+					});
 
-					// stream everything but map files
-					if (ext !== '.map') {
-						map = file + '.map';
-						vinylFile = new File({
-							cwd: cwd,
-							base: base,
-							path: path.join(base, clipPath(dest, file)),
-							contents: new Buffer(data)
-						});
-
-						// add sourcemap to vinyl file
-						if (options.sourcemap !== 'none' && ext === '.css' && fs.existsSync(map)) {
-							vinylFile.sourceMap = fs.readFileSync(map);
-						}
-
-						stream.push(vinylFile);
-
-
-				// --sourcemap=TYPE             How to link generated output to the source files.
-				//  auto (default): relative paths where possible, file URIs elsewhere
-				//  file: always absolute file URIs
-				//  inline: include the source text in the sourcemap
-				//  none: no sourcemaps
-
-
-						// TMP
-						if (vinylFile.sourceMap) {
-							console.log(vinylFile.sourceMap.toString());
-						}
-						else {
-							console.log(file + ' has no map');
-						}
-					}
+					stream.push(vinylFile);
 
 					next();
+					return;
 				});
 			}, function () {
 				stream.push(null);
