@@ -183,8 +183,17 @@ module.exports = function (source, options) {
 
 						// create relative paths for sources
 						sourcemap.sources = sourcemap.sources.map(function (sourcemapSource) {
+
+							console.log('sourcemapSource:', sourcemapSource);
+							console.log('base:', base);
+
 							// sourcemaps encode special chars while node does not; normalize here
 							var absoluteSourcePath = decodeURI(sourcemapSource.replace('file://', ''));
+
+							console.log('absoluteSourcePath:', absoluteSourcePath);
+
+							// here we will have issues with Windows. Looks like file has an extra / added on by Sass maybe? Check if it's from our stuff. Would be good to pair with someone that has gulp on a windows computer.
+
 							return path.relative(base, absoluteSourcePath);
 						});
 
