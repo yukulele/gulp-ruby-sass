@@ -188,9 +188,11 @@ module.exports = function (source, options) {
 							console.log('base:', base);
 
 							// sourcemaps encode special chars while node does not; normalize here
-							var absoluteSourcePath = decodeURI(sourcemapSource.replace('file://', ''));
+							var absoluteSourcePath = decodeURI(sourcemapSource.replace('file:///', ''));
 
 							console.log('absoluteSourcePath:', absoluteSourcePath);
+							absoluteSourcePath = path.resolve('/', absoluteSourcePath)
+							console.log('absoluteSourcePath resolved:', absoluteSourcePath);
 
 							// here we will have issues with Windows. Looks like file has an extra / added on by Sass maybe? Check if it's from our stuff. Would be good to pair with someone that has gulp on a windows computer.
 
